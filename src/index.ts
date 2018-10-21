@@ -1,5 +1,5 @@
 import { graphqlExpress } from 'apollo-server-express'
-import { apolloUploadExpress, GraphQLUpload } from 'apollo-upload-server'
+import { graphqlUploadExpress, GraphQLUpload } from 'graphql-upload'
 import * as bodyParser from 'body-parser-graphql'
 import * as cors from 'cors'
 import * as express from 'express'
@@ -45,6 +45,7 @@ import {
 } from './types'
 import { ITypeDefinitions } from 'graphql-tools/dist/Interfaces'
 import { defaultErrorFormatter } from './defaultErrorFormatter'
+import { AddressInfo } from 'net'
 
 export { MockList } from 'graphql-tools'
 export { PubSub, withFilter } from 'graphql-subscriptions'
@@ -221,9 +222,12 @@ export class GraphQLServer {
     )
 
     if (this.options.uploads) {
-      app.post(this.options.endpoint, apolloUploadExpress(this.options.uploads))
+      app.post(
+        this.options.endpoint,
+        graphqlUploadExpress(this.options.uploads),
+      )
     } else if (this.options.uploads !== false) {
-      app.post(this.options.endpoint, apolloUploadExpress())
+      app.post(this.options.endpoint, graphqlUploadExpress())
     }
 
     // All middlewares added before start() was called are applied to
@@ -380,7 +384,7 @@ export class GraphQLServer {
       combinedServer.listen(this.options.port, () => {
         callbackFunc({
           ...this.options,
-          port: combinedServer.address().port,
+          port: (combinedServer.address() as AddressInfo).port,
         })
         resolve(combinedServer)
       })
